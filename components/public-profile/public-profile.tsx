@@ -54,8 +54,21 @@ export function PublicProfile({ profile, links }: PublicProfileProps) {
     setIsLoading(false)
   }, [profile.id, supabase])
 
+  const getThemeClasses = () => {
+    const theme = profile.theme || "default"
+    const themeMap: Record<string, string> = {
+      default: "bg-gradient-to-br from-purple-50 via-pink-50 to-background dark:from-purple-950 dark:via-pink-950 dark:to-background",
+      ocean: "bg-gradient-to-br from-blue-50 via-cyan-50 to-background dark:from-blue-950 dark:via-cyan-950 dark:to-background",
+      sunset: "bg-gradient-to-br from-orange-50 via-red-50 to-background dark:from-orange-950 dark:via-red-950 dark:to-background",
+      forest: "bg-gradient-to-br from-green-50 via-emerald-50 to-background dark:from-green-950 dark:via-emerald-950 dark:to-background",
+      midnight: "bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900",
+      minimal: "bg-background",
+    }
+    return themeMap[theme] || themeMap.default
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className={`min-h-screen ${getThemeClasses()}`}>
       <div className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2 hover:bg-muted">

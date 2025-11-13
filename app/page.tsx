@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ThemeToggle } from "@/components/theme-toggle"
 import Link from "next/link"
 import { ArrowRight, Link2, Share2, BarChart3, Zap, Users, Sparkles } from "lucide-react"
 
@@ -13,7 +14,8 @@ export default function LandingPage() {
             <Sparkles className="h-6 w-6 text-primary" />
             Linktree Clone
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-3">
+            <ThemeToggle />
             <Link href="/auth/login">
               <Button variant="outline" className="bg-transparent">
                 Login

@@ -77,6 +77,11 @@ export default function LoginPage() {
                   </Button>
                 </div>
                 <div className="mt-4 text-center text-sm">
+                  <Link href="/auth/forgot-password" className="underline underline-offset-4 text-muted-foreground hover:text-primary">
+                    Forgot your password?
+                  </Link>
+                </div>
+                <div className="mt-2 text-center text-sm">
                   Don&apos;t have an account?{" "}
                   <Link href="/auth/sign-up" className="underline underline-offset-4">
                     Sign up
