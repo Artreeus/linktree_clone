@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Upload } from "lucide-react"
 import type { User } from "@supabase/supabase-js"
+import { validateUsername } from "@/lib/utils/username-validation"
 
 interface Profile {
   id: string
@@ -79,11 +80,43 @@ export function ProfileEditor({ user, profile }: ProfileEditorProps) {
   const handleSave = async () => {
     setIsLoading(true)
     try {
+      // Validate username
+      const validation = validateUsername(username)
+      if (!validation.isValid) {
+        toast({
+          title: "Invalid Username",
+          description: validation.error || "Invalid username",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // Normalize username (lowercase, trim)
+      const normalizedUsername = validation.normalized!
+
+      // Check if username is already taken
+      const { data: existingUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", normalizedUsername)
+        .single()
+
+      if (existingUser && existingUser.id !== user.id) {
+        toast({
+          title: "Username Taken",
+          description: "This username is already in use. Please choose another.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
           display_name: displayName,
-          username: username,
+          username: normalizedUsername,
           bio: bio,
           avatar_url: avatarUrl,
           updated_at: new Date().toISOString(),
@@ -91,6 +124,9 @@ export function ProfileEditor({ user, profile }: ProfileEditorProps) {
         .eq("id", user.id)
 
       if (error) throw error
+
+      // Update local state with normalized username
+      setUsername(normalizedUsername)
 
       toast({
         title: "Success",
@@ -150,10 +186,17 @@ export function ProfileEditor({ user, profile }: ProfileEditorProps) {
           <Input
             id="username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
             placeholder="your-username"
+            pattern="[a-zA-Z0-9_-]+"
+            maxLength={30}
           />
-          <p className="text-xs text-muted-foreground">Your unique profile URL: linktree.com/u/{username}</p>
+          <p className="text-xs text-muted-foreground">
+            Your unique profile URL: linkhub.com/u/{username || 'your-username'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Only letters, numbers, underscores, and hyphens allowed
+          </p>
         </div>
 
         <div className="grid gap-2">

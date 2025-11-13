@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, User, Lock, Download, Trash2 } from "lucide-react"
+import { ArrowLeft, User, Lock, Download, Trash2, Edit2, CheckCircle2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { validateUsername } from "@/lib/utils/username-validation"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,9 +33,83 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [newUsername, setNewUsername] = useState(profile?.username || "")
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
   const router = useRouter()
+
+  const handleUsernameChange = (value: string) => {
+    const sanitized = value.toLowerCase().replace(/\s/g, '')
+    setNewUsername(sanitized)
+    
+    if (sanitized) {
+      const validation = validateUsername(sanitized)
+      setUsernameError(validation.error || null)
+    } else {
+      setUsernameError(null)
+    }
+  }
+
+  const handleUsernameUpdate = async () => {
+    setIsLoading(true)
+    try {
+      const validation = validateUsername(newUsername)
+      if (!validation.isValid) {
+        toast({
+          title: "Invalid Username",
+          description: validation.error || "Invalid username",
+          variant: "destructive",
+        })
+        setIsLoading(false)
+        return
+      }
+
+      const normalizedUsername = validation.normalized!
+
+      // Check if username is already taken
+      if (normalizedUsername !== profile?.username) {
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("username", normalizedUsername)
+          .single()
+
+        if (existingUser) {
+          toast({
+            title: "Username Taken",
+            description: "This username is already in use. Please choose another.",
+            variant: "destructive",
+          })
+          setIsLoading(false)
+          return
+        }
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ username: normalizedUsername, updated_at: new Date().toISOString() })
+        .eq("id", user.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Username updated successfully",
+      })
+      setEditingUsername(false)
+      router.refresh()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update username",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -168,11 +243,75 @@ export function SettingsClient({ user, profile }: SettingsClientProps) {
             <CardContent className="space-y-4">
               <div className="grid gap-2">
                 <Label>Email</Label>
-                <Input value={user.email} disabled />
+                <Input value={user.email} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">
+                  Email cannot be changed. Contact support if needed.
+                </p>
               </div>
               <div className="grid gap-2">
                 <Label>Username</Label>
-                <Input value={profile?.username || ""} disabled />
+                {editingUsername ? (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newUsername}
+                        onChange={(e) => handleUsernameChange(e.target.value)}
+                        placeholder="your-username"
+                        maxLength={30}
+                        className={usernameError ? "border-destructive" : newUsername && !usernameError ? "border-green-500" : ""}
+                      />
+                      <Button
+                        onClick={handleUsernameUpdate}
+                        disabled={isLoading || !!usernameError || !newUsername}
+                        size="sm"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setEditingUsername(false)
+                          setNewUsername(profile?.username || "")
+                          setUsernameError(null)
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    {newUsername && (
+                      <p className="text-xs flex items-center gap-1">
+                        {usernameError ? (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-destructive" />
+                            <span className="text-destructive">{usernameError}</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            <span className="text-green-500">Username looks good!</span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Only letters, numbers, underscores, and hyphens allowed
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <Input value={profile?.username || ""} disabled className="bg-muted" />
+                    <Button
+                      onClick={() => setEditingUsername(true)}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                      Edit
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

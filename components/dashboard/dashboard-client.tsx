@@ -42,24 +42,16 @@ export function DashboardClient({ user, profile, initialLinks }: DashboardClient
   const [links, setLinks] = useState<Link[]>(initialLinks)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-50/30 dark:to-purple-950/30">
-      {/* Subtle background gradient */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-pink-500/5 dark:bg-pink-500/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-              Dashboard
-            </h1>
-            <p className="text-muted-foreground">Manage your LinkHub profile and track your success</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Manage your LinkHub profile</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-3">
             <PreviewButton username={profile?.username || ""} />
-            <Button variant="outline" asChild className="border-2 hover:border-primary/50 hover:bg-primary/5">
+            <Button variant="outline" asChild>
               <Link href="/dashboard/settings">Settings</Link>
             </Button>
             <LogoutButton />
@@ -67,31 +59,11 @@ export function DashboardClient({ user, profile, initialLinks }: DashboardClient
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border-2 border-border/50 p-1 h-auto">
-            <TabsTrigger 
-              value="profile" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white py-3 font-medium"
-            >
-              Profile
-            </TabsTrigger>
-            <TabsTrigger 
-              value="links"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-600 data-[state=active]:to-blue-600 data-[state=active]:text-white py-3 font-medium"
-            >
-              Links
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analytics"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white py-3 font-medium"
-            >
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger 
-              value="share"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600 data-[state=active]:text-white py-3 font-medium"
-            >
-              Share
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="links">Links</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="share">Share</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">

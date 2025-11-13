@@ -10,6 +10,17 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { Trash2, Plus, GripVertical, ExternalLink, Calendar, Instagram, Twitter, Linkedin, Github, Youtube, Facebook, Globe, Mail } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Link {
   id: string
@@ -200,76 +211,118 @@ export function EnhancedLinksManager({ userId, links, setLinks }: EnhancedLinksM
         </CardHeader>
         <CardContent className="space-y-4">
           {links.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No links yet. Add your first link to get started!</p>
+            <div className="text-center py-12 border border-dashed border-border rounded-lg">
+              <p className="text-sm text-muted-foreground mb-4">No links yet. Add your first link to get started!</p>
+              <Button onClick={() => setIsAddingLink(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Link
+              </Button>
+            </div>
           ) : (
-            <div className="space-y-2">
-              {links.map((link) => (
-                <div
-                  key={link.id}
-                  draggable
-                  onDragStart={() => handleDragStart(link.id)}
-                  onDragOver={(e) => handleDragOver(e, link.id)}
-                  onDragEnd={handleDragEnd}
-                  className="flex items-center gap-2 p-3 border rounded-lg cursor-move hover:border-primary transition-colors"
-                >
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{link.title}</p>
-                    <p className="text-sm text-muted-foreground truncate">{link.url}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={link.is_active}
-                      onCheckedChange={() => handleToggleActive(link.id, link.is_active)}
-                    />
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Edit Link</DialogTitle>
-                          <DialogDescription>Update your link details</DialogDescription>
-                        </DialogHeader>
-                        <LinkEditForm
-                          link={link}
-                          onSave={(updates) => {
-                            handleUpdateLink(link.id, updates)
-                            setEditingId(null)
-                          }}
+            <div className="space-y-3">
+              {links.map((link) => {
+                const Icon = SOCIAL_ICONS[link.icon_url as keyof typeof SOCIAL_ICONS] || ExternalLink
+                return (
+                  <div
+                    key={link.id}
+                    draggable
+                    onDragStart={() => handleDragStart(link.id)}
+                    onDragOver={(e) => handleDragOver(e, link.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex items-center gap-3 p-4 border rounded-lg cursor-move hover:border-primary transition-all ${
+                      !link.is_active ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{link.title}</p>
+                      <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex flex-col items-center">
+                        <Switch
+                          checked={link.is_active}
+                          onCheckedChange={() => handleToggleActive(link.id, link.is_active)}
                         />
-                      </DialogContent>
-                    </Dialog>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteLink(link.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                        <span className="text-xs text-muted-foreground mt-1">
+                          {link.is_active ? 'Active' : 'Hidden'}
+                        </span>
+                      </div>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            Edit
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Edit Link</DialogTitle>
+                            <DialogDescription>Update your link details</DialogDescription>
+                          </DialogHeader>
+                          <LinkEditForm
+                            link={link}
+                            onSave={(updates) => {
+                              handleUpdateLink(link.id, updates)
+                              setEditingId(null)
+                            }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Link?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete "{link.title}". This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteLink(link.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
-          <Dialog open={isAddingLink} onOpenChange={setIsAddingLink}>
-            <DialogTrigger asChild>
-              <Button className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Link
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Link</DialogTitle>
-                <DialogDescription>Create a new link for your profile</DialogDescription>
-              </DialogHeader>
-              <LinkEditForm
-                onSave={(linkData) => {
-                  handleAddLink(linkData)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+          {links.length > 0 && (
+            <Dialog open={isAddingLink} onOpenChange={setIsAddingLink}>
+              <DialogTrigger asChild>
+                <Button className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Link
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add New Link</DialogTitle>
+                  <DialogDescription>Create a new link for your profile</DialogDescription>
+                </DialogHeader>
+                <LinkEditForm
+                  onSave={(linkData) => {
+                    handleAddLink(linkData)
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -295,7 +348,7 @@ function LinkEditForm({ link, onSave }: { link?: Link; onSave: (data: Partial<Li
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input
@@ -304,7 +357,9 @@ function LinkEditForm({ link, onSave }: { link?: Link; onSave: (data: Partial<Li
           onChange={(e) => setTitle(e.target.value)}
           placeholder="My awesome link"
           required
+          maxLength={100}
         />
+        <p className="text-xs text-muted-foreground">{title.length}/100 characters</p>
       </div>
 
       <div className="space-y-2">
@@ -317,21 +372,23 @@ function LinkEditForm({ link, onSave }: { link?: Link; onSave: (data: Partial<Li
           placeholder="https://example.com"
           required
         />
+        <p className="text-xs text-muted-foreground">Include https:// or http://</p>
       </div>
 
       <div className="space-y-2">
         <Label>Icon</Label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {Object.entries(SOCIAL_ICONS).map(([key, Icon]) => (
             <button
               key={key}
               type="button"
               onClick={() => setIconType(key as keyof typeof SOCIAL_ICONS)}
-              className={`p-3 border rounded-lg flex items-center justify-center transition-colors ${
-                iconType === key ? "border-primary bg-primary/10" : "border-border"
+              className={`p-4 border rounded-lg flex flex-col items-center justify-center gap-2 transition-all ${
+                iconType === key ? "border-primary bg-primary/10 scale-105" : "border-border hover:border-primary/50"
               }`}
             >
               <Icon className="h-5 w-5" />
+              <span className="text-xs capitalize">{key}</span>
             </button>
           ))}
         </div>

@@ -10,15 +10,31 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { validateUsername, sanitizeUsername } from "@/lib/utils/username-validation"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle2, AlertCircle } from "lucide-react"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
   const [username, setUsername] = useState("")
+  const [usernameError, setUsernameError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  const handleUsernameChange = (value: string) => {
+    const sanitized = sanitizeUsername(value)
+    setUsername(sanitized)
+    
+    if (sanitized) {
+      const validation = validateUsername(sanitized)
+      setUsernameError(validation.error || null)
+    } else {
+      setUsernameError(null)
+    }
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +48,36 @@ export default function SignUpPage() {
       return
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      setIsLoading(false)
+      return
+    }
+
+    // Validate username
+    const validation = validateUsername(username)
+    if (!validation.isValid) {
+      setError(validation.error || "Invalid username")
+      setIsLoading(false)
+      return
+    }
+
+    const normalizedUsername = validation.normalized!
+
     try {
+      // Check if username is already taken
+      const { data: existingUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", normalizedUsername)
+        .single()
+
+      if (existingUser) {
+        setError("Username is already taken. Please choose another.")
+        setIsLoading(false)
+        return
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -40,7 +85,7 @@ export default function SignUpPage() {
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
           data: {
-            username: username || email.split("@")[0],
+            username: normalizedUsername,
           },
         },
       })
@@ -84,8 +129,28 @@ export default function SignUpPage() {
                       placeholder="johndoe"
                       required
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => handleUsernameChange(e.target.value)}
+                      className={usernameError ? "border-destructive" : username && !usernameError ? "border-green-500" : ""}
+                      maxLength={30}
                     />
+                    {username && (
+                      <p className="text-xs flex items-center gap-1">
+                        {usernameError ? (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-destructive" />
+                            <span className="text-destructive">{usernameError}</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            <span className="text-green-500">Username available!</span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Only letters, numbers, underscores, and hyphens allowed
+                    </p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="password">Password</Label>

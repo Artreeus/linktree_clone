@@ -54,24 +54,11 @@ export function PublicProfile({ profile, links }: PublicProfileProps) {
     setIsLoading(false)
   }, [profile.id, supabase])
 
-  const getThemeClasses = () => {
-    const theme = profile.theme || "default"
-    const themeMap: Record<string, string> = {
-      default: "bg-gradient-to-br from-purple-50 via-pink-50 to-background dark:from-purple-950 dark:via-pink-950 dark:to-background",
-      ocean: "bg-gradient-to-br from-blue-50 via-cyan-50 to-background dark:from-blue-950 dark:via-cyan-950 dark:to-background",
-      sunset: "bg-gradient-to-br from-orange-50 via-red-50 to-background dark:from-orange-950 dark:via-red-950 dark:to-background",
-      forest: "bg-gradient-to-br from-green-50 via-emerald-50 to-background dark:from-green-950 dark:via-emerald-950 dark:to-background",
-      midnight: "bg-gradient-to-br from-indigo-900 via-purple-900 to-gray-900",
-      minimal: "bg-background",
-    }
-    return themeMap[theme] || themeMap.default
-  }
-
   return (
-    <div className={`min-h-screen ${getThemeClasses()}`}>
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2 hover:bg-muted">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
@@ -80,49 +67,40 @@ export function PublicProfile({ profile, links }: PublicProfileProps) {
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
-          {/* Profile Header with animations */}
-          <div className="text-center mb-8 animate-fade-in">
+          {/* Profile Header */}
+          <div className="text-center mb-8">
             {profile.avatar_url && (
-              <div className="relative inline-block mb-4">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/50 rounded-full blur-lg opacity-50 animate-pulse"></div>
-                <img
-                  src={profile.avatar_url || "/placeholder.svg"}
-                  alt={profile.display_name}
-                  className="relative w-24 h-24 rounded-full mx-auto object-cover border-4 border-primary shadow-lg hover:scale-110 transition-transform duration-300"
-                />
-              </div>
+              <img
+                src={profile.avatar_url || "/placeholder.svg"}
+                alt={profile.display_name}
+                className="w-24 h-24 rounded-full mx-auto object-cover border-2 border-border mb-4"
+              />
             )}
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold mb-2">
               {profile.display_name || profile.username}
             </h1>
-            {profile.bio && <p className="text-muted-foreground text-lg max-w-xs mx-auto">{profile.bio}</p>}
+            {profile.bio && (
+              <p className="text-muted-foreground max-w-sm mx-auto">{profile.bio}</p>
+            )}
           </div>
 
-          {/* Links with staggered animations */}
+          {/* Links */}
           <div className="space-y-3">
             {links.length === 0 ? (
-              <div className="text-center py-8 animate-fade-in">
+              <div className="text-center py-12 border border-dashed border-border rounded-lg">
                 <p className="text-muted-foreground">No links available yet</p>
               </div>
             ) : (
-              links.map((link, index) => (
-                <div
-                  key={link.id}
-                  className="animate-fade-in"
-                  style={{
-                    animationDelay: `${index * 100}ms`,
-                  }}
-                >
-                  <LinkCard link={link} userId={profile.id} />
-                </div>
+              links.map((link) => (
+                <LinkCard key={link.id} link={link} userId={profile.id} />
               ))
             )}
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-12 animate-fade-in">
+          <div className="text-center mt-12">
             <p className="text-sm text-muted-foreground">
-              Powered by <span className="font-semibold text-primary">Linktree Clone</span>
+              Powered by <span className="font-semibold">LinkHub</span>
             </p>
           </div>
         </div>
